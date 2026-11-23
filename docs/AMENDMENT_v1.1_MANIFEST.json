@@ -1,0 +1,8 @@
+{
+ "written_at": "2026-11-19T19:54:58.372912+00:00",
+ "note": "hashed before any v1.1 outcome was computed",
+ "sha256": {
+  "docs/PROTOCOL_AMENDMENT_v1.1_posthoc.md": "80116143a2f8c331f2a926d1b39efc53fccc8abb1708fc079430b824546b5138",
+  "src/corrected/models_v11.py": "b52fdbc3e2890fd9c4863ea796dd4820d0da61f9f56a01b65c3138d8f559d98f"
+ }
+}

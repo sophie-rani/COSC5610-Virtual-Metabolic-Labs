@@ -1,0 +1,234 @@
+{
+ "V3_n": {
+  "ica": 307,
+  "lact": 346
+ },
+ "CMP": [
+  {
+   "variant": "V0 original (frozen v1.0)",
+   "analyte": "ica",
+   "n": 557,
+   "AUROC_model": 0.8392,
+   "AUROC_baseline": 0.7974,
+   "dAUROC": 0.0418,
+   "dAUROC_lo": 0.0061,
+   "dAUROC_hi": 0.0792,
+   "MAE_model": 0.0528,
+   "MAE_baseline": 0.0569,
+   "MAE_red_lo": 0.0002,
+   "MAE_red_hi": 0.0079
+  },
+  {
+   "variant": "V1 ML fixes (grouped Ridge, RRT)",
+   "analyte": "ica",
+   "n": 557,
+   "AUROC_model": 0.8392,
+   "AUROC_baseline": 0.7974,
+   "dAUROC": 0.0419,
+   "dAUROC_lo": 0.0079,
+   "dAUROC_hi": 0.0764,
+   "MAE_model": 0.0527,
+   "MAE_baseline": 0.0569,
+   "MAE_red_lo": 0.0003,
+   "MAE_red_hi": 0.008
+  },
+  {
+   "variant": "V2 collected \u2264 t0",
+   "analyte": "ica",
+   "n": 520,
+   "AUROC_model": 0.857,
+   "AUROC_baseline": 0.8071,
+   "dAUROC": 0.0499,
+   "dAUROC_lo": 0.0185,
+   "dAUROC_hi": 0.0829,
+   "MAE_model": 0.0471,
+   "MAE_baseline": 0.0521,
+   "MAE_red_lo": 0.001,
+   "MAE_red_hi": 0.0092
+  },
+  {
+   "variant": "V3 resulted \u2264 t0 (primary corrected)",
+   "analyte": "ica",
+   "n": 307,
+   "AUROC_model": 0.7626,
+   "AUROC_baseline": 0.7047,
+   "dAUROC": 0.0579,
+   "dAUROC_lo": 0.0042,
+   "dAUROC_hi": 0.1155,
+   "MAE_model": 0.0712,
+   "MAE_baseline": 0.0776,
+   "MAE_red_lo": 0.0001,
+   "MAE_red_hi": 0.013
+  },
+  {
+   "variant": "V0 original (frozen v1.0)",
+   "analyte": "lact",
+   "n": 471,
+   "AUROC_model": 0.8744,
+   "AUROC_baseline": 0.7741,
+   "dAUROC": 0.1002,
+   "dAUROC_lo": 0.0481,
+   "dAUROC_hi": 0.1552,
+   "MAE_model": 0.9834,
+   "MAE_baseline": 1.2664,
+   "MAE_red_lo": 0.1353,
+   "MAE_red_hi": 0.4712
+  },
+  {
+   "variant": "V1 ML fixes (grouped Ridge, RRT)",
+   "analyte": "lact",
+   "n": 471,
+   "AUROC_model": 0.8744,
+   "AUROC_baseline": 0.7741,
+   "dAUROC": 0.1002,
+   "dAUROC_lo": 0.0486,
+   "dAUROC_hi": 0.1536,
+   "MAE_model": 0.9834,
+   "MAE_baseline": 1.2664,
+   "MAE_red_lo": 0.1324,
+   "MAE_red_hi": 0.4644
+  },
+  {
+   "variant": "V2 collected \u2264 t0",
+   "analyte": "lact",
+   "n": 439,
+   "AUROC_model": 0.8807,
+   "AUROC_baseline": 0.7661,
+   "dAUROC": 0.1146,
+   "dAUROC_lo": 0.0637,
+   "dAUROC_hi": 0.1664,
+   "MAE_model": 0.9226,
+   "MAE_baseline": 1.2198,
+   "MAE_red_lo": 0.1441,
+   "MAE_red_hi": 0.5157
+  },
+  {
+   "variant": "V3 resulted \u2264 t0 (primary corrected)",
+   "analyte": "lact",
+   "n": 346,
+   "AUROC_model": 0.8498,
+   "AUROC_baseline": 0.7544,
+   "dAUROC": 0.0954,
+   "dAUROC_lo": 0.0334,
+   "dAUROC_hi": 0.1618,
+   "MAE_model": 1.2566,
+   "MAE_baseline": 1.5909,
+   "MAE_red_lo": 0.1813,
+   "MAE_red_hi": 0.5051
+  }
+ ],
+ "V3_bedside": [
+  {
+   "stratum": "total Ca <8.5 mg/dL",
+   "sens": 0.774,
+   "spec": 0.48,
+   "false_reassurance_lowalb": 0.316,
+   "n_hypo_lowalb": 19.0
+  },
+  {
+   "stratum": "corrected 0.8 <8.5 mg/dL",
+   "sens": 0.387,
+   "spec": 0.88,
+   "false_reassurance_lowalb": 0.895,
+   "n_hypo_lowalb": 19.0
+  },
+  {
+   "stratum": "Payne 1.0 <8.5 mg/dL",
+   "sens": 0.323,
+   "spec": 0.88,
+   "false_reassurance_lowalb": 0.895,
+   "n_hypo_lowalb": 19.0
+  },
+  {
+   "stratum": "primary model <1.12 mmol/L",
+   "sens": 0.774,
+   "spec": 0.6,
+   "false_reassurance_lowalb": 0.211,
+   "n_hypo_lowalb": 19.0
+  }
+ ],
+ "V3_secondary": [
+  {
+   "analysis": "KEY SECONDARY vs corrected Ca 0.8 (albumin-measured)",
+   "n": 56,
+   "dAUC": 0.125,
+   "dAUC_lo": -0.045,
+   "dAUC_hi": 0.281
+  },
+  {
+   "analysis": "secondary: corrected Ca 0.8 vs total Ca (albumin-measured)",
+   "n": 56,
+   "dAUC": -0.067,
+   "dAUC_lo": -0.198,
+   "dAUC_hi": 0.057
+  },
+  {
+   "analysis": "secondary: Payne 1.0 vs total Ca (albumin-measured)",
+   "n": 56,
+   "dAUC": -0.077,
+   "dAUC_lo": -0.234,
+   "dAUC_hi": 0.076
+  }
+ ],
+ "V3_AG16": {
+  "n": 271.0,
+  "npos": 137.0,
+  "model_sens": 0.65,
+  "model_spec": 0.821
+ },
+ "alpha": {
+  "V1_ica": 10.0,
+  "V2_ica": 3.1622776601683795,
+  "V3_ica": 10.0
+ },
+ "bias": [
+  {
+   "split": "dev (OOF)",
+   "n": 920,
+   "prevalence_gt2": 0.507,
+   "mean_measured": 3.048,
+   "mean_estimated": 2.552,
+   "mean_bias": -0.495,
+   "median_bias": -0.058,
+   "log_scale_mean_bias": -0.034,
+   "smearing_factor_from_training": 1.203,
+   "mean_bias_if_smeared": 0.023,
+   "MAE": 1.275,
+   "MAE_if_smeared": 1.326,
+   "sens_at_2": 0.727,
+   "sens_at_2_if_smeared": 0.861
+  },
+  {
+   "split": "val",
+   "n": 379,
+   "prevalence_gt2": 0.383,
+   "mean_measured": 2.373,
+   "mean_estimated": 2.253,
+   "mean_bias": -0.12,
+   "median_bias": 0.085,
+   "log_scale_mean_bias": 0.065,
+   "smearing_factor_from_training": 1.203,
+   "mean_bias_if_smeared": 0.337,
+   "MAE": 0.886,
+   "MAE_if_smeared": 0.978,
+   "sens_at_2": 0.676,
+   "sens_at_2_if_smeared": 0.834
+  },
+  {
+   "split": "test",
+   "n": 346,
+   "prevalence_gt2": 0.587,
+   "mean_measured": 3.468,
+   "mean_estimated": 2.679,
+   "mean_bias": -0.789,
+   "median_bias": -0.254,
+   "log_scale_mean_bias": -0.133,
+   "smearing_factor_from_training": 1.162,
+   "mean_bias_if_smeared": -0.354,
+   "MAE": 1.257,
+   "MAE_if_smeared": 1.178,
+   "sens_at_2": 0.729,
+   "sens_at_2_if_smeared": 0.857
+  }
+ ]
+}

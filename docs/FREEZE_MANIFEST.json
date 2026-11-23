@@ -1,0 +1,25 @@
+{
+ "frozen_at": "2026-11-19T16:29:39.654858+00:00",
+ "test_built": true,
+ "primary": {
+  "ica": "Ridge regression vs B1 total Ca (calibrated)",
+  "lact": "Gradient boosting vs B2 AG+HCO3 (calibrated)"
+ },
+ "thresholds": {
+  "ica": 1.12,
+  "lact": 2.0
+ },
+ "train": "dev+val",
+ "sha256": {
+  "config.py": "dcdc384a8eabb6d368c940d57ccbf727b6f6fdc7837214296a278302a8f0b9a2",
+  "build.py": "330cf313dd8e8d10d9f1118f33126c43f7416e664dcb87e641d8a044ca928177",
+  "models.py": "4b009dcbd9a469e1341b46e131b3b23b52ff483ee283a270891e98930f667d22",
+  "metrics.py": "075867bf6f648d3b99962553a21a33560efc1ccda108caca9770a9c6da3bcb35",
+  "final.py": "d5ab79c52c56050eef1c78da5c1558848fee811324c17a49fb35830cc066b6aa",
+  "PROTOCOL.md": "f1a60398d7ee7277e22e4776ae9f62a89c93864aab72b131ff970e491cdf6378",
+  "AUDIT_LOG.md": "e24b6dcf86bdbbf711ea1c9055b14bd35b0dddee7d12e0961fc2dac041797673",
+  "run_dev.py": "e63ead7c7617378ce8c98972ed9cfb3cc748f07459405115fa523ad2b8940dca",
+  "aux.py": "fafec7fc68890303218aa6bb0f7a23a36f55e9e244a8b067ce607575e66e4b40",
+  "phase3.py": "c44eb1fea3b2d0cf4e47eab8b16f7f848a0cbcb30735fb4c67891ff072ba24f4"
+ }
+}

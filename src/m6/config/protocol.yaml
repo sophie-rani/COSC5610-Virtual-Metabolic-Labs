@@ -1,0 +1,191 @@
+# Frozen definitions transcribed from Protocol v3.0 (17 Nov 2026).
+# Changes require an entry in reports/DECISIONS.md.
+protocol_version: "3.2"   # amendments: protocol/AMENDMENT_v3.1.md, protocol/AMENDMENT_v3.2.md
+raw_dir_env: RAW_DIR          # raw credentialed data live outside the repo
+seeds: {outer_cv: 5610, bootstrap: 5611}
+
+windows_h:
+  landmark: 48
+  severity_gcs: [0, 24]       # complete GCS <=8, [t0, t0+24h)
+  eligibility_motor: [36, 48] # >=1 motor 1-5, zero motor 6, [36h, 48h)
+  broad_motor: [24, 48]       # sensitivity: last exam in [24,48) < 6
+  strict_motor: [0, 48]       # sensitivity: no motor 6 anywhere in [0,48)
+
+expected:                     # audit anchors, NOT acceptance targets
+  mimic: {step1: 1404, alive_L: 1219, icu_L: 959, no_cmo: 954, no_exam: 21, motor6: 460, final: 473, code_only: 4, strict: 337, broad: 538}
+  eicu:  {step1: 1232, alive_L: 1027, icu_L: 812, no_cmo: 807, no_exam: 231, motor6: 266, final: 310, code_only: 1, strict: 243, broad: 358}
+  source_rows: {mimic_patients: 364627, mimic_admissions: 546028, mimic_icustays: 94458, eicu_unitstays: 200859, eicu_patients: 139367, eicu_hospitals: 208}
+
+mimic_items:
+  gcs_eye: 220739
+  gcs_verbal: 223900
+  gcs_motor: 223901
+  rass: 228096
+  map_invasive: [220052, 225312]
+  map_cuff: 220181
+  spo2: 220277
+  hr: 220045
+  rr: 220210
+  temp_c: 223762
+  temp_f: 223761
+  fio2: 223835
+  peep: 220339
+  vent_procedure: 225792
+  o2_device: 226732
+  code_status: 223758
+  pupils: [227121, 227288]
+  pressors: {norepinephrine: [221906], phenylephrine: [221749, 229630], vasopressin: [222315], epinephrine: [221289], dopamine: [221662]}
+  hypnotics: {propofol: [222168], midazolam: [221668], dexmedetomidine: [225150, 229420], ketamine: [221712], pentobarbital: [225156], lorazepam: [221385]}
+  hypnotic_bolus: [222168, 221668, 221385, 221623]
+  labs: {sodium: [50983, 50824], glucose: [50931, 50809], hemoglobin: [51222, 50811], creatinine: [50912], paco2: [50818], pao2: [50821], lactate: [50813]}
+
+# ICD rules (MIMIC stores codes without dots).
+icd:
+  icd10_structural_prefix: "S06"
+  icd10_structural_exclude_prefix: ["S060"]   # concussion
+  icd10_extra_prefix: ["S06A"]
+  icd10_exclude_7th: ["D", "S"]              # subsequent encounter / sequela
+  icd9_any: ["851", "852", "853", "854"]
+  icd9_4th_digit: {codes: ["800", "801", "803", "804"], digits: "12346789"}
+  severity:
+    icd10_codes_prefix: ["R40243"]
+    icd10_s06_6th: "5678"
+    icd9_5th: "45"
+    icd10_s06a_all: true
+
+v31:
+  severity_max_total: 8
+  severity_max_motor: 5        # A: qualifying exam cannot show command-following
+  index_rule: first_adult_tbi_icu_stay   # B: severity must be met during this stay
+  delayed_icu_admit_h: 24      # B sensitivity: hospital-to-ICU admission > 24 h
+  sedation:                    # E: markers; absence of a marker != confirmed absence of sedation
+    bolus_lookback_h: 2
+    rass_lookback_h: 1
+    rass_deep: -3
+    eicu_infusion_carry_h: 1   # protocol §6
+  min_exams_sensitivity: 2
+
+v32:
+  primary_estimand: E2            # ICU death and alive ICU exit are competing states; admin censoring only at day 14
+  sensitivity_estimands: [E1]     # alive exit censored, IPCW scoring
+  horizons_h_from_t0: [168, 336]
+  icu_death_grace_h: 6
+  states: [recovery, icu_death, alive_exit, administrative]
+  key_secondary: {endpoint: confirmed_m6, population: strict}
+  withdrawn: [post_exit_death_72h]
+  model_structure: separate_cause_specific   # recovery, icu_death, alive_exit
+  model_fallback:                 # applied mechanically at G7 before any performance is examined
+    min_events_per_inner_training_split: 30   # per competing cause; below this, pool icu_death + alive_exit
+    numerical: "pool if any competing-cause fit fails to converge or yields non-finite linear predictors in any outer fold"
+    scope: "decided per fitting cohort/endpoint; the same structure for Models A-D"
+    # A cause-specific model that shrinks to zero coefficients is NOT a trigger: it contributes the
+    # marginal hazard, which remains valid for the recovery CIF.
+    # Known consequence at adoption (counts in artifacts/g3_feasibility.json): MIMIC primary and confirmed ->
+    # separate (min ~36 alive-exit events per inner split); strict-cohort REFIT -> pooled (~28).
+  strict_population: evaluate_primary_models_in_subgroup   # D-026 approved; refit only as sensitivity if feasibility supports it (fallback rule => pooled competing model)
+
+g6_requirements:
+  documentation_intensity:        # D-019 (approved 17 Nov 2026)
+    - assess exam / vital / medication documentation intensity per patient and per eICU hospital, using [t0, L) data only
+    - report hospital-level variation (eICU) and database differences before any feature is finalised
+    - any proposed predictor must be computable from information available at L; no post-L documentation
+    - documentation-intensity predictors enter only if prespecified at G6 and approved before G7
+
+g6_requirements_extra:
+  eicu_pre_first_record_off:      # D-030: an ASSUMPTION, not an observation
+    note: "eICU hours before an agent's first infusion record are coded off; this is an assumption"
+    g6_impact_assessment: "report features with the assumption vs with those hours set unknown; keep missingness/eligibility indicators"
+  near_zero_variance:             # D-031: prespecified before any G6 feature values are computed
+    rule: "exclude a feature if, in MIMIC development data, freq(most common value)/freq(second most common) > 19 AND distinct values < 10% of non-missing observations (caret nearZeroVar defaults); continuous features also excluded if the most common value occurs in >95% of patients"
+    applies_to: all features, applied identically; eICU never used for this decision
+
+g5:                               # hourly physiology over [0, L), bins [h, h+1) (protocol §6)
+  vital_window_h: {mimic: 1.0, eicu: 0.25}   # superseded by vital_window_by_source (D-033)
+  vital_window_by_source:          # D-033 (approved): window follows the source's charting cadence
+    automated_monitor: 0.25        # eICU vitalPeriodic (5-min automated)
+    nurse_charted: 1.0             # MIMIC chartevents vitals and eICU nurseCharting
+  vital_rule: "most recent valid value in window; same-time ties by source priority; never averaged"
+  ranges: {map: [20, 200], spo2: [50, 100], hr: [20, 250], rr: [4, 70], temp: [30, 43], fio2: [0.21, 1.0], peep: [0, 30]}
+  setting_carry_h: 4               # FiO2 / PEEP; never across a ventilation-state change, t0 or L
+  setting_carry_sensitivity_h: [0, 6]
+  fio2_rule: "value in [21, 100] -> /100; value in [0.21, 1.0] -> fraction as charted; anything else invalid (e.g. 2-6 = probable L/min)"
+  peep_not_applicable_when_vent_0: true
+  mimic_sources:   # (variable, itemid, priority: lower wins at the same timestamp)
+    map: [[220052, 1], [225312, 2], [220181, 3]]
+    spo2: [[220277, 1]]
+    hr: [[220045, 1]]
+    rr: [[220210, 1]]
+    temp: [[223762, 1], [223761, 2]]           # 223761 is Fahrenheit -> Celsius
+    fio2: [[223835, 1]]
+    peep: [[220339, 1]]
+  eicu_sources:    # vitalPeriodic columns first, nurseCharting fallback (same-time priority)
+    map: [["vp:systemicmean", 1], ["nc:Invasive BP|Invasive BP Mean", 2], ["nc:Non-Invasive BP|Non-Invasive BP Mean", 3]]
+    spo2: [["vp:sao2", 1], ["nc:O2 Saturation|O2 Saturation", 2]]
+    hr: [["vp:heartrate", 1], ["nc:Heart Rate|Heart Rate", 2]]
+    rr: [["vp:respiration", 1], ["nc:Respiratory Rate|Respiratory Rate", 2]]
+    temp: [["nc:Temperature|Temperature (C)", 1]]
+    fio2: [["rc:FiO2", 1]]
+    peep: [["rc:PEEP", 1]]
+  labs:
+    mimic: {sodium: [50983, 50824], glucose: [50931, 50809], hemoglobin: [51222, 50811], creatinine: [50912], paco2: [50818], pao2: [50821], lactate: [50813]}
+    eicu: {sodium: sodium, glucose: glucose, hemoglobin: Hgb, creatinine: creatinine, paco2: paCO2, pao2: paO2, lactate: lactate}
+    ranges: {sodium: [110, 180], glucose: [20, 1000], hemoglobin: [2, 25], creatinine: [0.1, 20], paco2: [10, 120], pao2: [20, 600], lactate: [0, 30]}
+    expected_units: {sodium: ["mEq/L", "mmol/L"], glucose: ["mg/dL"], hemoglobin: ["g/dL"], creatinine: ["mg/dL"], paco2: ["mm Hg", "mmHg"], pao2: ["mm Hg", "mmHg"], lactate: ["mmol/L"]}
+
+g4:                               # treatment exposure, predictor window [0, L)
+  hour_bin_rule: any_overlap      # state 'on' if active at any time in [h, h+1); 'unknown' if any unknown portion and no 'on'
+  eicu_carry_h: 1.0               # protocol §6; sensitivities 0.5 h and 2 h (§11)
+  eicu_carry_sensitivity_h: [0.5, 2.0]
+  eicu_exclude_name_regex: "volume"            # volume entries are not rate/state documentation
+  mimic_vent_devices: ["Endotracheal tube", "Tracheostomy tube"]
+  vent_device_window_h: 2
+  eicu_vent_labels: ["Tidal Volume (set)", "Vent Rate", "PEEP"]
+  eicu_vent_window_h: 2
+  pressor_regex: "norepi|levophed|phenyleph|neo-syn|vasopressin|epinephrine|dopamine"
+
+eicu:
+  structural_path: "trauma - CNS|intracranial injury"   # matched anywhere in path (DECISIONS D-001)
+  traumatic_hematoma_regex: "(subdural|epidural) hematoma\\|secondary to trauma|trauma - CNS\\|fracture of skull\\|.*with (subdural|epidural) hematoma"
+  severity_regex: "trauma - CNS\\|coma|trauma - CNS\\|.*herniation"
+  gcs_label: "Glasgow coma score"
+  # C: component labels used for eligibility AND outcome ascertainment. Total-only labels excluded.
+  gcs_components:
+    "Glasgow coma score|Eyes": eye
+    "Glasgow coma score|Verbal": verbal
+    "Glasgow coma score|Motor": motor
+    "Best Eye Response|Value": eye
+    "Best Verbal Response|Value": verbal
+    "Best Motor Response|Value": motor
+  gcs_text_values: {"Obeys simple commands": 6, "Localizes to noxious stimuli": 5, "Oriented": 5, "Confused": 4, "Incomprehensible sounds": 2}
+  gcs_ranges: {eye: [1, 4], verbal: [1, 5], motor: [1, 6]}
+  hypnotic_regex: "propofol|diprivan|midazolam|versed|dexmed|precedex|ketamine|pentobarb|lorazepam"
+  cmo_group: "Care Limitation"
+  cmo_value: "Comfort measures only"
+
+features_frozen:                   # D-038 / D-039 approved 17 Nov 2026; git tag v3.2-features-frozen
+  A: [age, gcs_first_total, motor_worst_0_24, motor_last_36_48, hours_last_exam_to_L]
+  B: [map_median, spo2_median, hr_median, rr_median, temp_median, map_lt70, spo2_lt94, hr_gt120, temp_gt385,
+      map_iqr, spo2_iqr, map_delta, spo2_delta, sodium_median, glucose_median, hgb_first, creat_first]
+  C: [pressor_frac, pressor_delta, vent_frac, fio2_median, fio2_ge50, fio2_delta, peep_median, peep_ge10, hypnotic_frac]
+  D: [d1_refractory_hypotension, d3_refractory_desaturation, d5_map_x_pressor, d6_spo2_x_fio2, d7_dmap_x_dpressor, d8_dspo2_x_dfio2]
+  ladder: {A: 5, B: 22, C: 31, D: 37}
+  excluded: {code_only_severe: near_zero_variance, d2_within_pressor_hypotension: eicu_missing_gt30, d4_supported_highpeep_normoxemia: D-038, pressor_ge4h: D-039}
+
+g7:                                # frozen before any model was fitted (D-041)
+  outer: {k: 5, seed: 5610, stratify: E2 state}
+  inner: {k: 3, seed_rule: "5610 + 1000 * outer_fold", stratify: E2 state, within: outer training fold only}
+  preprocessing: "training-fold median imputation -> D5/D6 products of training-fold z-scores of imputed components -> training-fold z-score of every model column; glmnet standardize = FALSE"
+  missingness_indicators: none     # none prespecified (protocol §8)
+  penalty: {alpha: 0.5, n_lambda: 15, lambda_min_ratio: 0.01, lambda_max: "glmnet, per training fold and cause", select: "lambda.min of inner-CV partial-likelihood deviance"}
+  ties: breslow                    # glmnet Cox and baseline hazard
+  cif: "product-limit: F_k(t) = sum_{t_j<=t} S(t_j-) dLambda_k(t_j), S = prod(1 - sum_c dLambda_c)  (D-041; §9 exp form violated §13 bounds)"
+  horizons_since_L: [120, 288]     # day 7, day 14
+  stability_refits: {n: 200, seed: 5612, note: "descriptive; full pipeline incl. tuning on bootstrap samples"}
+
+g85_exploratory:                   # Protocol v3.3 (post-G8, hypothesis-generating); tag v3.3-exploratory-frozen
+  model_E: {base: C, add: [cv_prev_supported_now_off, cv_supported_at_L_map_ok, cv_map_lt70_at_L, log_pf_last, pf_missing]}
+  cv: {window_h: [42, 48], map_threshold: 70, map_fallback_window_h: [36, 48], min_pressor_hours_in_window: 1,
+       hierarchy: [map_lt70_at_L, supported_at_L_map_ok, prev_supported_now_off, never_supported]}
+  pf: {pao2_itemid: 50821, specimen_itemid: 52033, specimen: "ART.", pao2_range: [20, 600], window_h: [0, 48],
+       fio2: "last charted record at or before the gas, within 4 h, constant ventilation state", transform: log, missing: "median + pf_missing indicator"}
+  evaluation: {contrast: E-C, orientation: E-D, bootstrap: {n: 1000, seed: 5611}, stability_refits: {n: 200, seed: 5612}}
